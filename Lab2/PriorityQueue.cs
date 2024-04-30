@@ -27,16 +27,13 @@ namespace PriorityQueues
 
 		public IPriorityQueueHandle<TElement, TPriority> Enqueue(TElement element, TPriority priority)
 		{
-            var handle = new PriorityQueueHandle(this, 0);
+            
             priorityQueue.Add((element, priority));
-
             Count++;
-            Console.WriteLine();
-            for (int i = 0; i < Count; i++)
-            {
-                Console.Write(priorityQueue[i].Item2 + ", ");
-            }
-            Console.WriteLine();
+            var handle = new PriorityQueueHandle(this, Count - 1);
+
+            
+
             int stepps = PriorityUp(Count - 1);
 
 			return handle;
@@ -46,13 +43,13 @@ namespace PriorityQueues
 			if (Count <= 0) throw new InvalidOperationException();
 
 			var handel = new PriorityQueueHandle(this, 0);
-
-            Console.WriteLine();
-            Console.WriteLine();
-            for (int i = 0; i < Count; i++)
-            {
-                Console.Write(priorityQueue[i].Item2 + ", ");
-            }
+			
+			if(Count == 1)
+			{
+				priorityQueue.RemoveAt(0);
+				Count = 0;
+				return handel;
+			}
 
             var tmp = priorityQueue[Count - 1];
 			priorityQueue[Count -1] = priorityQueue[0];
@@ -61,16 +58,7 @@ namespace PriorityQueues
 
             Count--;
 
-            Console.WriteLine();
             int stepps = PriorityDown(0);
-
-            Console.WriteLine();
-            for (int i = 0; i < Count; i++)
-            {
-                Console.Write(priorityQueue[i].Item2 + ", ");
-            }
-			Console.WriteLine();
-
 
             return handel;
 
@@ -82,9 +70,9 @@ namespace PriorityQueues
 				priority = default;
 				return false;
 			}
-			var handle = Dequeue();
-			element = handle.Element;
-			priority = handle.Priority;
+			element = priorityQueue[0].Item1;
+			priority = priorityQueue[0].Item2;
+			Dequeue();
 			return true;
 		}
         private int PriorityUp(int index) 
@@ -94,7 +82,6 @@ namespace PriorityQueues
 			{
                 int parentIndex = (index -1) / 2;
 
-                
                 if (comparer.Compare(priorityQueue[parentIndex].Item2, priorityQueue[index].Item2) >= 0)
 				{
 					break;
@@ -123,16 +110,12 @@ namespace PriorityQueues
                 rChildIndex = 2 * index + 2;
                 int smallestIndex = index;
 
-				Console.WriteLine(rChildIndex + "/" + lChildIndex + "///" + smallestIndex );
-
 				if (rChildIndex < Count && comparer.Compare(priorityQueue[rChildIndex].Item2, priorityQueue[smallestIndex].Item2) > 0)
 				{
-					Console.WriteLine("R");
 					smallestIndex = rChildIndex;
 				}
                 if (lChildIndex < Count && comparer.Compare(priorityQueue[lChildIndex].Item2, priorityQueue[smallestIndex].Item2) > 0)
                 {
-                    Console.WriteLine("L");
                     smallestIndex = lChildIndex;
                 }
 				if (index != smallestIndex)
@@ -145,10 +128,6 @@ namespace PriorityQueues
 				index = smallestIndex;
             }
 			return stepps;
-            
-
-
-
         }
 
         public bool TryPeek(out TElement element, out TPriority priority)
@@ -183,11 +162,21 @@ namespace PriorityQueues
 
 				set
 				{
-
+					_priorityQueue.priorityQueue[index] = (_priorityQueue.priorityQueue[index].Item1, value);
+					_priorityQueue.PriorityDown(index);
+					_priorityQueue.PriorityUp(index);
 				}
 			}
 
 		}
+		private void queuePrint()
+		{
+            for (int i = 0; i < Count; i++)
+            {
+                Console.Write(priorityQueue[i].Item2 + ", ");
+            }
+            Console.WriteLine();
+        }
     }
 
 }
