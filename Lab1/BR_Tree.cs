@@ -6,7 +6,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace dva246_lab1 {
+namespace dva246_lab1
+{
     interface IOrderedSet<TElement> : IEnumerable<TElement> where TElement : struct, IComparable<TElement>
     {
         int Count { get; }
@@ -88,13 +89,13 @@ namespace dva246_lab1 {
         {
             Node parent = node.Parent;
             Node uncle;
-            while(node != root && parent.Color == NodeColor.Red)
+            while (node != root && parent.Color == NodeColor.Red)
             {
                 parent = node.Parent;
                 if (parent.Parent.Right == parent)
                 {
                     uncle = parent.Parent.Left;
-                    if(uncle != null && uncle.Color == NodeColor.Red)
+                    if (uncle != null && uncle.Color == NodeColor.Red)
                     {
                         uncle.Color = NodeColor.Black;
                         parent.Color = NodeColor.Black;
@@ -119,7 +120,7 @@ namespace dva246_lab1 {
                 else
                 {
                     uncle = parent.Parent.Right;
-                    if(uncle != null && uncle.Color == NodeColor.Red)
+                    if (uncle != null && uncle.Color == NodeColor.Red)
                     {
                         uncle.Color = NodeColor.Black;
                         parent.Color = NodeColor.Black;
@@ -130,7 +131,7 @@ namespace dva246_lab1 {
                     }
                     else
                     {
-                        if(node == parent.Right)
+                        if (node == parent.Right)
                         {
                             node = parent;
                             RotateLeft(node);
@@ -168,33 +169,33 @@ namespace dva246_lab1 {
             Node y = node.Left;
             node.Left = y.Right;
 
-            if(y.Right != null) y.Right.Parent = node;
+            if (y.Right != null) y.Right.Parent = node;
 
             y.Parent = node.Parent;
 
             if (node.Parent == null) root = y;
-            else if(node.Parent.Right == node) node.Parent.Right = y;
+            else if (node.Parent.Right == node) node.Parent.Right = y;
             else node.Parent.Left = y;
 
             y.Right = node;
             node.Parent = y;
-        } 
+        }
         //Compares given element with the element of current node to find the node belonging to given element
         public bool Search(TElement element)
         {
             Node current = root;
 
-            while(current != null)
+            while (current != null)
             {
-                if(element.CompareTo(current.Element) == 0)
+                if (element.CompareTo(current.Element) == 0)
                 {
                     return true;
                 }
-                else if(element.CompareTo(current.Element) > 0)
+                else if (element.CompareTo(current.Element) > 0)
                 {
                     current = current.Right;
                 }
-                else if(element.CompareTo(current.Element) < 0)
+                else if (element.CompareTo(current.Element) < 0)
                 {
                     current = current.Left;
                 }
@@ -207,7 +208,7 @@ namespace dva246_lab1 {
         {
             Node current = root;
 
-            while(current != null && current.Left != null)
+            while (current != null && current.Left != null)
             {
                 current = current.Left;
             }
@@ -218,9 +219,9 @@ namespace dva246_lab1 {
         {
             Node current = root;
 
-            while(current != null && current.Right != null)
-            { 
-                current = current.Right; 
+            while (current != null && current.Right != null)
+            {
+                current = current.Right;
             }
             return current.Element;
         }
@@ -230,11 +231,11 @@ namespace dva246_lab1 {
         {
             TElement successor = element;
 
-            if(!Search(element)) return null;
+            if (!Search(element)) return null;
 
-            foreach(var value in this)
+            foreach (var value in this)
             {
-                if(element.CompareTo(value) < 0) { return value; }
+                if (element.CompareTo(value) < 0) { return value; }
             }
             return null;
         }
@@ -252,14 +253,14 @@ namespace dva246_lab1 {
                 if (element.CompareTo(value) == 0) { break; }
                 successor = value;
             }
-            if(element.CompareTo(successor) == 0) return null;
+            if (element.CompareTo(successor) == 0) return null;
             return successor;
         }
 
         //Using enumerator to enumerate through "other" and adding each value to "this"
         public void UnionWith(IEnumerable<TElement> other)
         {
-            foreach(var value in other)
+            foreach (var value in other)
             {
                 this.Insert(value);
             }
@@ -278,20 +279,20 @@ namespace dva246_lab1 {
         //Recursivly enumerates through the tree, breaks on null and recursively returns element of nodes.
         private IEnumerable<TElement> InOrder(Node node)
         {
-            if(node == null) yield break; //If tree has no nodes or node is leaf
+            if (node == null) yield break; //If tree has no nodes or node is leaf
 
-            if(node.Left  != null)
+            if (node.Left != null)
             {
-                foreach(TElement element in InOrder(node.Left))
+                foreach (TElement element in InOrder(node.Left))
                 {
                     yield return element;
                 }
             }
             yield return node.Element;
 
-            if(node.Right != null)
+            if (node.Right != null)
             {
-                foreach(TElement element in InOrder(node.Right))
+                foreach (TElement element in InOrder(node.Right))
                 {
                     yield return element;
                 }

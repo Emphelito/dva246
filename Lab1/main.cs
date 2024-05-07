@@ -16,9 +16,9 @@ namespace dva246_lab1
 
             Console.ReadLine();
         }
-        
+
     }
 }
 
 
-    
+
