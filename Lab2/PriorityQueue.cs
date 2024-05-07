@@ -11,6 +11,8 @@ namespace PriorityQueues
 		private List<(TElement, TPriority)> priorityQueue;
         private IComparer<TPriority> comparer;
 
+		public List<int> stepList = new List<int>();
+
         public PriorityQueue()
 		{
             priorityQueue = new List<(TElement, TPriority)> ();
@@ -32,9 +34,7 @@ namespace PriorityQueues
             Count++;
             var handle = new PriorityQueueHandle(this, Count - 1);
 
-            
-
-            int stepps = PriorityUp(Count - 1);
+            stepList.Add(PriorityUp(Count - 1));
 
 			return handle;
 		}
@@ -48,6 +48,7 @@ namespace PriorityQueues
 			{
 				priorityQueue.RemoveAt(0);
 				Count = 0;
+				stepList.Add(0);
 				return handel;
 			}
 
@@ -58,7 +59,7 @@ namespace PriorityQueues
 
             Count--;
 
-            int stepps = PriorityDown(0);
+            stepList.Add(PriorityDown(0));
 
             return handel;
 
@@ -102,10 +103,10 @@ namespace PriorityQueues
 			int rChildIndex;
 			int lChildIndex;
 
-            int stepps = 0;
+            int steps = 0;
 			while (true && Count > 1)
 			{
-				stepps++;
+				steps++;
                 lChildIndex = 2 * index + 1;
                 rChildIndex = 2 * index + 2;
                 int smallestIndex = index;
@@ -127,7 +128,7 @@ namespace PriorityQueues
 				else break;
 				index = smallestIndex;
             }
-			return stepps;
+			return steps;
         }
 
         public bool TryPeek(out TElement element, out TPriority priority)
