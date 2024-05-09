@@ -206,6 +206,7 @@ namespace dva246_lab1
         //Goes to the right as far as possible to find smallest element
         public TElement? Minimum()
         {
+            if(root == null) return null;
             Node current = root;
 
             while (current != null && current.Left != null)
@@ -217,6 +218,7 @@ namespace dva246_lab1
         //Goes to the right as far as possible to find largest element
         public TElement? Maximum()
         {
+            if(root == null) return null;
             Node current = root;
 
             while (current != null && current.Right != null)
@@ -229,32 +231,104 @@ namespace dva246_lab1
         //Ex. match: 43, ...41,43,45... break and return 43
         public TElement? Successor(TElement element)
         {
-            TElement successor = element;
-
             if (!Search(element)) return null;
 
-            foreach (var value in this)
+            var prev = Maximum();
+            Node current = root;
+
+            if (element.CompareTo(current.Element) < 0)
             {
-                if (element.CompareTo(value) < 0) { return value; }
+                prev = current.Element;
             }
-            return null;
+
+            while (current.Element.CompareTo(element) != 0)
+            {
+                Console.WriteLine(current.Left.Element + " / " + current.Element + " / " + current.Right.Element + "\n / " + prev + "\n");
+                if (element.CompareTo(current.Element) < 0)
+                {
+                    current = current.Left;
+                }
+                else if (element.CompareTo(current.Element) > 0)
+                {
+                    current = current.Right;
+
+                }
+                if (prev.CompareTo(current.Element) > 0 && element.CompareTo(current.Element) < 0)
+                {
+                    prev = current.Element;
+                }
+            }
+            if (current.Left != null)
+            {
+                current = current.Left;
+                prev = current.Element;
+
+                while (current != null)
+                {
+
+                    if (prev.CompareTo(current.Element) < 0 && element.CompareTo(current.Element) > 0)
+                    {
+                        prev = current.Element;
+                    }
+
+                    current = current.Right;
+                }
+            }
+            if (prev.CompareTo(element) == 0) return null;
+            return prev;
         }
 
         //if we cant find the value in the tree return null. if <element> matches a value in tree return the last value. 
         //Ex. match: 43, ...41,43,45... break and return 41
         public TElement? Predecessor(TElement element)
         {
-            TElement successor = element;
+            TElement predecessor = element;
 
             if (!Search(element)) return null;
 
-            foreach (var value in this)
+            TElement prev = default;
+            Node current = root;
+
+            if (prev.CompareTo(current.Element) < 0 && element.CompareTo(current.Element) > 0)
             {
-                if (element.CompareTo(value) == 0) { break; }
-                successor = value;
+                prev = current.Element;
             }
-            if (element.CompareTo(successor) == 0) return null;
-            return successor;
+
+            while (current.Element.CompareTo(element) != 0)
+            {
+                //Console.WriteLine(current.Left.Element + " / " + current.Element + " / " + current.Right.Element + "\n / " + prev + "\n");
+                if (element.CompareTo(current.Element) < 0)
+                {
+                    current = current.Left;
+                }
+                else if (element.CompareTo(current.Element) > 0)
+                {
+                    current = current.Right;
+
+                }
+                if (prev.CompareTo(current.Element) < 0 && element.CompareTo(current.Element) > 0)
+                {
+                    prev = current.Element;
+                }
+            }
+            if(current.Left != null)
+            {
+                current = current.Left;
+                prev = current.Element;
+
+                while (current != null)
+                {
+
+                    if (prev.CompareTo(current.Element) < 0 && element.CompareTo(current.Element) > 0)
+                    {
+                        prev = current.Element;
+                    }
+
+                    current = current.Right;
+                }
+            }
+            if (prev.CompareTo(element) == 0) return null;
+            return prev;
         }
 
         //Using enumerator to enumerate through "other" and adding each value to "this"

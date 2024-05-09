@@ -12,8 +12,13 @@ namespace dva246_lab1
     {
         static void Main(string[] args)
         {
-            OrderedSet<int> ints = new OrderedSet<int>();
+            OrderedSet<int> sets = new OrderedSet<int>();
 
+            for (int i = 0; i <= 1000; i++)
+            {
+                sets.Insert(i);
+            }
+            Console.WriteLine(sets.Successor(256));
             Console.ReadLine();
         }
 
