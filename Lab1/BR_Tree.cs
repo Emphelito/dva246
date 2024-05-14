@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -233,17 +234,11 @@ namespace dva246_lab1
         {
             if (!Search(element)) return null;
 
-            var prev = Maximum();
             Node current = root;
-
-            if (element.CompareTo(current.Element) < 0)
-            {
-                prev = current.Element;
-            }
 
             while (current.Element.CompareTo(element) != 0)
             {
-                Console.WriteLine(current.Left.Element + " / " + current.Element + " / " + current.Right.Element + "\n / " + prev + "\n");
+                
                 if (element.CompareTo(current.Element) < 0)
                 {
                     current = current.Left;
@@ -251,31 +246,28 @@ namespace dva246_lab1
                 else if (element.CompareTo(current.Element) > 0)
                 {
                     current = current.Right;
-
                 }
-                if (prev.CompareTo(current.Element) > 0 && element.CompareTo(current.Element) < 0)
-                {
-                    prev = current.Element;
-                }
+               
             }
-            if (current.Left != null)
+            if(current.Right != null)
             {
-                current = current.Left;
-                prev = current.Element;
-
-                while (current != null)
+                current = current.Right;
+                while(current.Left != null)
                 {
-
-                    if (prev.CompareTo(current.Element) < 0 && element.CompareTo(current.Element) > 0)
-                    {
-                        prev = current.Element;
-                    }
-
-                    current = current.Right;
+                    current = current.Left;
                 }
             }
-            if (prev.CompareTo(element) == 0) return null;
-            return prev;
+            else if(current.Right == null)
+            {
+                ;
+                current = current.Parent;
+                while (current.Element.CompareTo(element) < 0 && current.Parent != null)
+                {
+                    current = current.Parent;
+                }
+                if (current.Element.CompareTo(element) < 0) return null;
+            }
+            return current.Element;
         }
 
         //if we cant find the value in the tree return null. if <element> matches a value in tree return the last value. 

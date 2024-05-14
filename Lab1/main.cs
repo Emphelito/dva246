@@ -18,7 +18,7 @@ namespace dva246_lab1
             {
                 sets.Insert(i);
             }
-            Console.WriteLine(sets.Successor(256));
+            Console.WriteLine(sets.Successor(992));
             Console.ReadLine();
         }
 
