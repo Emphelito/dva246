@@ -7,11 +7,26 @@ namespace PriorityQueues
 
 	class MainClass
 	{
-        
+        public static void GetHeapType()
+        {
+            PriorityQueue<string, int> queue = new PriorityQueue<string, int>();
+            queue.Enqueue("one", 1);
+            queue.Enqueue("two", 2);
+            string element;
+            int priority;
+            bool success = queue.TryPeek(out element, out priority);
+            var handler = queue.Dequeue();
+            if (success == false || handler.Priority != priority)
+                Environment.Exit(10);
+            if (priority == 1)
+                Console.WriteLine("PriorityQueue is implemented as a MinHeap!");
+            if (priority == 2)
+                Console.WriteLine("PriorityQueue is implemented as a MaxHeap!");
+        }
         public static void Main(string[] args)
 		{
             PriorityQueue<string, int> queue = new PriorityQueue<string, int>();
-
+            GetHeapType();
             //A three step increase n*2^3
 
             stepMethod(2, queue);           //1 steps

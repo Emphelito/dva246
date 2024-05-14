@@ -149,23 +149,28 @@ namespace PriorityQueues
 		{
             private readonly PriorityQueue<TElement, TPriority> _priorityQueue;
 			private int index;
+			private TElement _element;
+			private TPriority _priority;
 
-			public PriorityQueueHandle(PriorityQueue<TElement, TPriority> priorityQueue, int index)
+			public PriorityQueueHandle(PriorityQueue<TElement, TPriority> __priorityQueue, int index)
             {
-                _priorityQueue = priorityQueue;
+                _priorityQueue = __priorityQueue;
                 this.index = index;
+				_element = __priorityQueue.priorityQueue[index].Item1;
+                _priority = __priorityQueue.priorityQueue[index].Item2;
             }
 
-            public TElement Element => _priorityQueue.priorityQueue[index].Item1;
+            public TElement Element => _element;
 			public TPriority Priority
 			{
-				get => _priorityQueue.priorityQueue[index].Item2;
+				get => _priority;
 
 				set
 				{
 					_priorityQueue.priorityQueue[index] = (_priorityQueue.priorityQueue[index].Item1, value);
 					_priorityQueue.PriorityDown(index);
 					_priorityQueue.PriorityUp(index);
+					_priority = value;
 				}
 			}
 
