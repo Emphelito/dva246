@@ -326,6 +326,8 @@ namespace dva246_lab1
         //Using enumerator to enumerate through "other" and adding each value to "this"
         public void UnionWith(IEnumerable<TElement> other)
         {
+            if (other.Count() == 0) return;
+
             foreach (var value in other)
             {
                 this.Insert(value);
