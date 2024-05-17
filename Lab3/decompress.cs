@@ -17,6 +17,7 @@ namespace Huffman
             foreach (byte b in data)
             {
                 Console.Write(b);
+                break;
             }
         }
     }

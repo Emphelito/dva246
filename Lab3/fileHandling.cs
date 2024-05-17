@@ -53,9 +53,15 @@ namespace Huffman
                 }
                 else
                 {
-                    //BitArray bitArray = new BitArray(data);
+
+                    foreach (byte b in data)
+                    {
+                        Console.Write(b);
+                    }
+                    Console.WriteLine();
+                    Console.WriteLine();
                     fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
-                    using (FileStream fs = new FileStream("test.txt", FileMode.Create))
+                    using (FileStream fs = new FileStream(fileName, FileMode.Create))
                         fs.Write(data, 0, data.Length);
                 }
                 

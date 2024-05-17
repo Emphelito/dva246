@@ -18,7 +18,7 @@ namespace Huffman
 
         public int CompareTo(Node other)
         {
-            return frequency.CompareTo(other.frequency);
+            return frequency - other.frequency;
         }
     }
     public class Compress
@@ -27,7 +27,7 @@ namespace Huffman
         private List<byte> encodedTree;
         private List<byte> encodedData;
         private PriorityQueue<int, Node> priorityQueue;
-        Dictionary<byte, BitArray> encodeTable = new Dictionary<byte, BitArray>();
+        Dictionary<byte, List<int>> encodeTable = new Dictionary<byte, List<int>>();
 
         public Compress(string fileName) 
         {
@@ -42,14 +42,14 @@ namespace Huffman
 
             encodedTree = new List<byte>();
             encodedData = new List<byte>();
-            BitArray bitArray = new BitArray(0);
+            List<int> bitArray = new List<int>();
 
             priorityQueue.TryPeek(out int p, out Node current);
             EncodeTree(current, bitArray);
 
             EncodeData();
             
-            fh.Write(encodedData.ToArray());
+            fh.Write(data);
         }
 
         private bool DataToHeap()
@@ -83,10 +83,10 @@ namespace Huffman
             int p;
             while (priorityQueue.Count > 1)
             {
-                Node left = new Node();
+                Node left;
                 priorityQueue.TryDequeue(out p, out left);
 
-                Node right = new Node();
+                Node right; 
                 priorityQueue.TryDequeue(out p, out right);
 
                 Node parent = new Node();
@@ -98,50 +98,61 @@ namespace Huffman
             }
         }
 
-        private void EncodeTree(Node current, BitArray bitPrefix)
+        private void EncodeTree(Node current, List<int> bitPrefix)
         {      
             if (current == null) return;
 
             if(current.value != 0)
             {
-                bitPrefix.Length++;
-                bitPrefix[bitPrefix.Length - 1] = true;
+                bitPrefix.Add(1);
                 encodeTable.Add(current.value, bitPrefix);
                 encodedTree.Add(1);
                 encodedTree.Add(current.value);
-
+                return;
             }
             else
             {
                 encodedTree.Add(0);
-                BitArray leftPrefix = new BitArray(bitPrefix);
-                leftPrefix.Length++;
-                leftPrefix[leftPrefix.Length - 1] = false;
+                List<int> leftPrefix = new List<int>();
+                leftPrefix.AddRange(bitPrefix);
+                leftPrefix.Add(0);
+                string binaryString = Convert.ToString(97, 2);
                 EncodeTree(current.left, leftPrefix);
 
-                BitArray rightPrefix = new BitArray(bitPrefix);
-                rightPrefix.Length++;
-                rightPrefix[rightPrefix.Length - 1] = false;
+                List<int> rightPrefix = new List<int>();
+                rightPrefix.AddRange(bitPrefix);
+                rightPrefix.Add(1);
                 EncodeTree(current.right, rightPrefix);
             }
             return;
 
         }
 
-        private byte[] EncodeData()
+        private void EncodeData()
         {
-            byte[] prefix;
-            encodedData.AddRange(encodedTree);
+            //string bitString = string.Join("", encodedTree.ToArray());
+            string bitString = "";
             foreach(var d in data)
             {
-                BitArray bitArray = encodeTable[d];
-                prefix = new byte[bitArray.Count];
-                bitArray.CopyTo(prefix, 0);
-                encodedData.AddRange(prefix);
-                encodedData.Add(d);
+                List<int> _bitArray = encodeTable[d];
+                char c = (char)d;
+                //Console.Write(d);
+                //Console.Write(" " + c + ": ");
+                foreach (var bit in _bitArray)
+                {
+                    bitString += bit.ToString();
+                    //Console.Write(bit);
+                }
+                //bitString += Convert.ToString(d, 2);
+                Console.WriteLine();
+                Console.WriteLine();
             }
-            return data;
 
+            data = new byte[(bitString.Length + 7) / 8];
+            for (int i = 0; i < bitString.Length; i += 8)
+            {
+                data[i/8] = Convert.ToByte(bitString.Substring(i, Math.Min(8, bitString.Length - i)), 2);
+            }
         }
 
     }
