@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace dva246_lab3
+namespace Huffman
+
 {
+
     public class main
     {
         static void Main(string[] args)
@@ -30,5 +32,18 @@ namespace dva246_lab3
 
         }
 
+    }
+    public class Node : IComparable<Node>
+    {
+        public int frequency;
+        public byte value;
+
+        internal Node left = null;
+        internal Node right = null;
+
+        public int CompareTo(Node other)
+        {
+            return frequency - other.frequency;
+        }
     }
 }

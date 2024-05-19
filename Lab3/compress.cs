@@ -8,19 +8,7 @@ using System.Threading.Tasks;
 
 namespace Huffman
 {
-    public class Node:IComparable<Node>
-    {
-        public int frequency;
-        public byte value;
 
-        internal Node left = null;
-        internal Node right = null;
-
-        public int CompareTo(Node other)
-        {
-            return frequency - other.frequency;
-        }
-    }
     public class Compress
     {
         private byte[] data;
@@ -49,7 +37,8 @@ namespace Huffman
 
             EncodeData();
             
-            fh.Write(data);
+            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
+            fh.Write(data, encodedTree.ToArray());
         }
 
         private bool DataToHeap()
@@ -71,7 +60,7 @@ namespace Huffman
             }
             foreach (var keypair in frequency)
             {
-                priorityQueue.Enqueue(0, new Node { frequency = keypair.Value, value = keypair.Key });
+                priorityQueue.Enqueue(keypair.Key, new Node { frequency = keypair.Value, value = keypair.Key });
             }
 
             return true;
@@ -98,7 +87,7 @@ namespace Huffman
             }
         }
 
-        private void EncodeTree(Node current, List<int> bitPrefix)
+        /*private void EncodeTree(Node current, List<int> bitPrefix)
         {      
             if (current == null) return;
 
@@ -116,40 +105,49 @@ namespace Huffman
                 List<int> leftPrefix = new List<int>();
                 leftPrefix.AddRange(bitPrefix);
                 leftPrefix.Add(0);
-                string binaryString = Convert.ToString(97, 2);
                 EncodeTree(current.left, leftPrefix);
 
+                encodedTree.Add(0);
                 List<int> rightPrefix = new List<int>();
                 rightPrefix.AddRange(bitPrefix);
-                rightPrefix.Add(1);
+                rightPrefix.Add(0);
                 EncodeTree(current.right, rightPrefix);
             }
             return;
 
+        }*/
+        private void EncodeTree(Node current, List<int> str)
+        {
+            if (current == null)
+            {
+                return;
+            }
+            if (current.value != 0)
+            {
+                encodeTable[current.value] = str;
+            }
+            List<int> strR = new List<int>(str);
+            strR.Add(1);
+            List<int> strL = new List<int>(str);
+            strL.Add(0);
+            EncodeTree(current.left, strL);
+            EncodeTree(current.right, strR);
         }
 
         private void EncodeData()
         {
-            //string bitString = string.Join("", encodedTree.ToArray());
             string bitString = "";
             foreach(var d in data)
             {
                 List<int> _bitArray = encodeTable[d];
-                char c = (char)d;
-                //Console.Write(d);
-                //Console.Write(" " + c + ": ");
                 foreach (var bit in _bitArray)
                 {
                     bitString += bit.ToString();
-                    //Console.Write(bit);
                 }
-                //bitString += Convert.ToString(d, 2);
-                Console.WriteLine();
-                Console.WriteLine();
             }
 
-            data = new byte[(bitString.Length + 7) / 8];
-            for (int i = 0; i < bitString.Length; i += 8)
+            data = new byte[((bitString.Length + 7) / 8) + 8];
+            for (int i = 8; i < bitString.Length; i += 8)
             {
                 data[i/8] = Convert.ToByte(bitString.Substring(i, Math.Min(8, bitString.Length - i)), 2);
             }

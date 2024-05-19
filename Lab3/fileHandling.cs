@@ -50,31 +50,32 @@ namespace Huffman
                     fileName = fileName.Substring(0, fileName.LastIndexOf("."));
                     using (FileStream fs = new FileStream(fileName, FileMode.Create))
                         File.WriteAllBytes(fileName, data);
-                }
-                else
-                {
-
-                    foreach (byte b in data)
-                    {
-                        Console.Write(b);
-                    }
-                    Console.WriteLine();
-                    Console.WriteLine();
-                    fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
-                    using (var stream = File.Open(fileName, FileMode.Create))
-                    {
-                        using (var writer = new BinaryWriter(stream, Encoding.UTF8, false))
-                            writer.Write(data);
-              
-                    }
-                }
-                
+                }                
             }
             catch
             {
                 throw new Exception($"Could not write to file: {fileName}");
             }
             
+        }
+        public void Write(byte[] data, byte[] treePath)
+        {
+            foreach (byte b in data)
+            {
+                Console.Write(b);
+            }
+            Console.WriteLine();
+            Console.WriteLine();
+            fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
+            using (var stream = File.Open(fileName, FileMode.Create))
+            {
+                using (var writer = new BinaryWriter(stream, Encoding.UTF8, false))
+                {
+                    writer.Write(treePath);
+                    writer.Write(data);
+                }
+
+            }
         }
     }
 }
