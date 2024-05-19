@@ -61,8 +61,12 @@ namespace Huffman
                     Console.WriteLine();
                     Console.WriteLine();
                     fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
-                    using (FileStream fs = new FileStream(fileName, FileMode.Create))
-                        fs.Write(data, 0, data.Length);
+                    using (var stream = File.Open(fileName, FileMode.Create))
+                    {
+                        using (var writer = new BinaryWriter(stream, Encoding.UTF8, false))
+                            writer.Write(data);
+              
+                    }
                 }
                 
             }

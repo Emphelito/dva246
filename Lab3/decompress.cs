@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ namespace Huffman
     internal class Decompress
     {
         private byte[] data;
+        private BitArray bitArray;
         public Decompress(string fileName)
         {
             FileHandling fh = new FileHandling(fileName);
@@ -19,6 +21,13 @@ namespace Huffman
                 Console.Write(b);
                 break;
             }
+
+            ByteToBit();
+        }
+        private void ByteToBit()
+        {
+            bitArray = new BitArray(data);
+
         }
     }
 }
