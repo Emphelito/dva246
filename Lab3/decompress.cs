@@ -13,7 +13,9 @@ namespace Huffman
         private BitArray bitArray;
         private int treeDataIndex;
         private byte[] treeStucture;
-        private Dictionary<byte, List<byte>> keyValuePairs;
+        private Dictionary<string, byte> keyValuePairs;
+        private string bitString;
+        private List<byte> content;
 
         private Node root = new Node();
         public Decompress(string fileName)
@@ -21,14 +23,14 @@ namespace Huffman
             FileHandling fh = new FileHandling(fileName);
             data = fh.Read();
 
-            foreach (byte b in data)
-            {
-                Console.Write(b);
-            }
-
             ByteToBit();
 
-            BuildTree(0, root);
+            BuildTree(root);
+
+            content = new List<byte>();
+            DecodeData(root);
+
+            fh.Write(content.ToArray());
         }
         private void ByteToBit()
         {
@@ -42,48 +44,107 @@ namespace Huffman
                     break;
                 }
             }
+            treeDataIndex += 1;
+
             treeStucture = new byte[i];
             Array.Copy(data, 1, treeStucture, 0, i);
-            bitArray = new BitArray(data);
+            byte[] dataTmp = new byte[data.Length - treeDataIndex];
+            Array.Copy(data, treeDataIndex, dataTmp, 0, data.Length - treeDataIndex);
+            bitArray = new BitArray(dataTmp);
 
+            bitString = "";
 
-            keyValuePairs = new Dictionary<byte, List<byte>>();
-            List<byte> path = new List<byte>();
+            foreach (var b in dataTmp)
+            {
+                bitString += Convert.ToString(b, 2).PadLeft(8, '0');
+            }
+
+            keyValuePairs = new Dictionary<string, byte>();
+            string pathString = "";
 
             foreach (byte b in treeStucture)
             {
                 if (b != 0 && b != 1)
                 {                    
-                    keyValuePairs.Add(b, path);
-                      
-                    path = new List<byte>();
+                    keyValuePairs.Add(pathString, b);
+
+                    pathString = "";
                 }
                 else
                 {
-                    path.Add(b);
+                    pathString += b.ToString();
                 }
             }
         }
-        private int BuildTree(int index, Node current)
-        {  
-            if (treeStucture[index] == 1)
+        private void BuildTree(Node current)
+        {
+            foreach(var n in treeStucture)
             {
-                current.value = treeStucture[index];
-                index += 2;
-                return index;
+                if (n == 1)
+                {
+                    if (current.right == null)
+                    {
+                        Node right = new Node();
+                        current.right = right;
+                    }
+                    current = current.right;
+                }
+                else if (n == 0)
+                {
+                    if (current.left == null)
+                    {
+                        Node left = new Node();
+                        current.left = left;
+                    }
+                    current = current.left;
+                }
+                else
+                {
+                    current.value = n;
+                    current = root;
+                }
             }
-            else
-            {
-                index++;
-                Node left = new Node();
-                current.left = left;
-                index = BuildTree(index, current.left);
+        }
 
-                Node right = new Node();
-                current.right = right;
-                index = BuildTree(index, current.right);
+        private void DecodeData(Node current)
+        {
+            string tmp = "";
+            string pathString = "";
+            for(int i = 0; i < bitString.Length; i++)
+            {
+                tmp += bitString[i];
+                if (bitString[i].Equals('0'))
+                {
+                    if(current.left == null)
+                    {
+                        current = root;
+                        content.Add(keyValuePairs[pathString]);
+                        pathString = "";
+                        i--;
+                    }
+                    else
+                    {
+                        pathString += bitString[i];
+                        current = current.left;
+                    }
+                }
+                else if (bitString[i].Equals('1'))
+                {
+                    if(current.right == null)
+                    {
+                        current = root;
+                        content.Add(keyValuePairs[pathString]);
+                        pathString = "";
+                        i--;
+                    }
+                    else
+                    {
+                        pathString += bitString[i];
+                        current = current.right;
+                    }
+                    
+                }
             }
-            return index;
         }
     }
 }

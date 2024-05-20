@@ -13,12 +13,12 @@ namespace Huffman
     {
         static void Main(string[] args)
         {
-            Compress cpi = new Compress("text.txt");
+            /*Compress cpi = new Compress("text.txt");
             Decompress dcpi = new Decompress("text.hf");
-            return;
+            return;*/
             if(args.Length != 2) 
             {
-                Console.WriteLine("Usage: Huffman.exe -<c|d> <filename>");
+                Console.WriteLine("Usage: Huffman.exe -<c/d> <filename>");
                 return;
             }
             if (args[0] == "-c")

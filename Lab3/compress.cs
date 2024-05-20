@@ -122,7 +122,7 @@ namespace Huffman
             {
                 return;
             }
-            if (current.value != 0)
+            else if (current.value != 0)
             {
                 encodeTable[current.value] = str;
             }
@@ -137,6 +137,15 @@ namespace Huffman
         private void EncodeData()
         {
             string bitString = "";
+            foreach(var b in encodeTable)
+            {
+                for(int i = 0; i < b.Value.Count; i += 1)
+                {
+                    encodedTree.Add(Convert.ToByte(b.Value[i]));
+                }
+                encodedTree.Add(b.Key);
+            }
+
             foreach(var d in data)
             {
                 List<int> _bitArray = encodeTable[d];
@@ -147,9 +156,9 @@ namespace Huffman
             }
 
             data = new byte[((bitString.Length + 7) / 8) + 8];
-            for (int i = 8; i < bitString.Length; i += 8)
+            for (int i = 0; i < bitString.Length/8; ++i)
             {
-                data[i/8] = Convert.ToByte(bitString.Substring(i, Math.Min(8, bitString.Length - i)), 2);
+                data[i] = Convert.ToByte(bitString.Substring(8 * i, 8), 2);
             }
         }
 
