@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dva246_lab1
 {
@@ -188,19 +183,19 @@ namespace dva246_lab1
 
             while (current != null)
             {
-                if (element.CompareTo(current.Element) == 0)
+                var cmp = element.CompareTo(current.Element);
+                if (cmp == 0)
                 {
                     return true;
                 }
-                else if (element.CompareTo(current.Element) > 0)
+                else if (cmp > 0)
                 {
                     current = current.Right;
                 }
-                else if (element.CompareTo(current.Element) < 0)
+                else if (cmp < 0)
                 {
                     current = current.Left;
                 }
-                else return false;
             }
             return false;
         }
@@ -210,7 +205,7 @@ namespace dva246_lab1
             if(root == null) return null;
             Node current = root;
 
-            while (current != null && current.Left != null)
+            while (current.Left != null)
             {
                 current = current.Left;
             }
@@ -222,7 +217,7 @@ namespace dva246_lab1
             if(root == null) return null;
             Node current = root;
 
-            while (current != null && current.Right != null)
+            while (current.Right != null)
             {
                 current = current.Right;
             }
@@ -232,22 +227,27 @@ namespace dva246_lab1
         //Ex. match: 43, ...41,43,45... break and return 43
         public TElement? Successor(TElement element)
         {
-            if (!Search(element)) return null;
-
             Node current = root;
-
-            while (current.Element.CompareTo(element) != 0)
-            {
-                
-                if (element.CompareTo(current.Element) < 0)
+            var cmp = element.CompareTo(current.Element);
+            while (cmp != 0)
+            {                
+                if (cmp < 0)
                 {
+                    if(current.Left == null)
+                    {
+                        return current.Element;
+                    }
                     current = current.Left;
                 }
-                else if (element.CompareTo(current.Element) > 0)
+                else if (cmp > 0)
                 {
+                    if (current.Right == null)
+                    {
+                        return current.Element;
+                    }
                     current = current.Right;
                 }
-               
+               cmp = element.CompareTo(current.Element);
             }
             if(current.Right != null)
             {
@@ -259,7 +259,6 @@ namespace dva246_lab1
             }
             else if(current.Right == null)
             {
-                ;
                 current = current.Parent;
                 while (current.Element.CompareTo(element) < 0 && current.Parent != null)
                 {
@@ -276,8 +275,6 @@ namespace dva246_lab1
         {
             TElement predecessor = element;
 
-            if (!Search(element)) return null;
-
             TElement prev = default;
             Node current = root;
 
@@ -286,15 +283,23 @@ namespace dva246_lab1
                 prev = current.Element;
             }
 
-            while (current.Element.CompareTo(element) != 0)
+            var cmp = element.CompareTo(current.Element);
+            while (cmp != 0)
             {
-                //Console.WriteLine(current.Left.Element + " / " + current.Element + " / " + current.Right.Element + "\n / " + prev + "\n");
-                if (element.CompareTo(current.Element) < 0)
+                if (cmp < 0)
                 {
+                    if (current.Left == null)
+                    {
+                        return prev;
+                    }
                     current = current.Left;
                 }
-                else if (element.CompareTo(current.Element) > 0)
+                else if (cmp > 0)
                 {
+                    if(current.Right == null)
+                    {
+                        return prev;
+                    }
                     current = current.Right;
 
                 }
@@ -302,6 +307,7 @@ namespace dva246_lab1
                 {
                     prev = current.Element;
                 }
+                cmp = element.CompareTo(current.Element);
             }
             if(current.Left != null)
             {
@@ -326,8 +332,6 @@ namespace dva246_lab1
         //Using enumerator to enumerate through "other" and adding each value to "this"
         public void UnionWith(IEnumerable<TElement> other)
         {
-            if (other.Count() == 0) return;
-
             foreach (var value in other)
             {
                 this.Insert(value);

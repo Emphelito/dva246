@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dva246_lab1
 {
@@ -16,11 +10,16 @@ namespace dva246_lab1
             OrderedSet<int> sets2 = new OrderedSet<int>();
             sets.UnionWith(sets2);
 
-            for (int i = 0; i <= 1000; i++)
+            for (int i = 0; i <= 221; i++)
             {
                 sets.Insert(i);
             }
-            Console.WriteLine(sets.Successor(999));
+            for (int i = 600; i <= 1000; i++)
+            {
+                sets.Insert(i);
+            }
+            Console.WriteLine(sets.Successor(500));
+            Console.WriteLine(sets.Predecessor(500));
                 
             Console.ReadLine();
         }
