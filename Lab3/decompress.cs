@@ -10,10 +10,10 @@ namespace Huffman
     internal class Decompress
     {
         private byte[] data;
-        private BitArray bitArray;
         private int treeDataIndex;
         private byte[] treeStucture;
-        private Dictionary<string, byte> keyValuePairs;
+        private Dictionary<byte, string> keyValuePairs;
+        private Dictionary<string, byte> encodedTable;
         private string bitString;
         private List<byte> content;
 
@@ -25,7 +25,14 @@ namespace Huffman
 
             ByteToBit();
 
-            BuildTree(root);
+            BuildTree(root, 0);
+
+            Console.WriteLine();
+            main m = new main();
+            //m.printTree(root);
+
+            encodedTable = new Dictionary<string, byte>();
+            DecodeTable(root, "");
 
             content = new List<byte>();
             DecodeData(root);
@@ -35,13 +42,24 @@ namespace Huffman
         private void ByteToBit()
         {
             int i;
-            byte bp = data[0]; 
-            for(i =1; i < data.Length; i++)
+            byte prev = 0;
+            byte bp = data[0];
+            keyValuePairs = new Dictionary<byte, string>();
+            string pathString = "";
+            for (i =1; i < data.Length; i++)
             {
-                if (data[i] == bp)
+                pathString += data[i];
+
+                if (data[i] == 1)
                 {
-                    treeDataIndex = i;
-                    break;
+                    keyValuePairs.Add(data[i + 1], pathString);
+                    i++;
+                    if (data[i] == bp)
+                    {
+                        treeDataIndex = i;
+                        break;
+                    }
+                    pathString = "";
                 }
             }
             treeDataIndex += 1;
@@ -50,7 +68,6 @@ namespace Huffman
             Array.Copy(data, 1, treeStucture, 0, i);
             byte[] dataTmp = new byte[data.Length - treeDataIndex];
             Array.Copy(data, treeDataIndex, dataTmp, 0, data.Length - treeDataIndex);
-            bitArray = new BitArray(dataTmp);
 
             bitString = "";
 
@@ -58,67 +75,58 @@ namespace Huffman
             {
                 bitString += Convert.ToString(b, 2).PadLeft(8, '0');
             }
-
-            keyValuePairs = new Dictionary<string, byte>();
-            string pathString = "";
-
-            foreach (byte b in treeStucture)
-            {
-                if (b != 0 && b != 1)
-                {                    
-                    keyValuePairs.Add(pathString, b);
-
-                    pathString = "";
-                }
-                else
-                {
-                    pathString += b.ToString();
-                }
-            }
         }
-        private void BuildTree(Node current)
+        private int BuildTree(Node current, int index)
         {
-            foreach(var n in treeStucture)
+            if (treeStucture[index] == 1)
             {
-                if (n == 1)
-                {
-                    if (current.right == null)
-                    {
-                        Node right = new Node();
-                        current.right = right;
-                    }
-                    current = current.right;
-                }
-                else if (n == 0)
-                {
-                    if (current.left == null)
-                    {
-                        Node left = new Node();
-                        current.left = left;
-                    }
-                    current = current.left;
-                }
-                else
-                {
-                    current.value = n;
-                    current = root;
-                }
+                current.value = treeStucture[index+ 1];
+                return index + 1;
             }
+            if(current.left == null) 
+            {
+                Node left = new Node();
+                current.left = left;
+            }            
+            index = BuildTree(current.left, index + 1);
+            if(current.right == null)
+            {
+                Node right = new Node();
+                current.right = right;
+            }
+             index = BuildTree(current.right, index + 1);
+
+            return index;
         }
 
+        private void DecodeTable(Node current, string path)
+        {
+            if(current.left == null && current.right == null)
+            {
+                encodedTable.Add(path, current.value);
+                //path = "";
+                return;
+
+            }
+            string lpath = path + "0";
+            string rpath = path + "1";
+            DecodeTable(current.left, lpath);
+            DecodeTable(current.right, rpath);
+            
+        }
         private void DecodeData(Node current)
         {
             string tmp = "";
             string pathString = "";
-            for(int i = 0; i < bitString.Length; i++)
+            for (int i = 0; i < bitString.Length; i++)
             {
                 tmp += bitString[i];
                 if (bitString[i].Equals('0'))
                 {
-                    if(current.left == null)
+                    if (current.left == null)
                     {
                         current = root;
-                        content.Add(keyValuePairs[pathString]);
+                        content.Add(encodedTable[pathString]);
                         pathString = "";
                         i--;
                     }
@@ -130,10 +138,10 @@ namespace Huffman
                 }
                 else if (bitString[i].Equals('1'))
                 {
-                    if(current.right == null)
+                    if (current.right == null)
                     {
                         current = root;
-                        content.Add(keyValuePairs[pathString]);
+                        content.Add(encodedTable[pathString]);
                         pathString = "";
                         i--;
                     }
@@ -142,7 +150,7 @@ namespace Huffman
                         pathString += bitString[i];
                         current = current.right;
                     }
-                    
+
                 }
             }
         }

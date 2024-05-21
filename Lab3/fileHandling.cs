@@ -20,7 +20,7 @@ namespace Huffman
         {
             if(fileName == null)
             {
-                return null;
+                throw new Exception($"Please provide a filename");
             }
             try
             {
@@ -42,7 +42,7 @@ namespace Huffman
                 {
 
                     fileName = fileName.Substring(0, fileName.LastIndexOf("."));
-                    fileName = "helllo.txt";
+                    fileName = "Huffman1.txt";
                     using (var stream = File.Open(fileName, FileMode.Create))
                     {
                         using (var writer = new BinaryWriter(stream, Encoding.ASCII, false))
@@ -64,7 +64,7 @@ namespace Huffman
             fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
             using (var stream = File.Open(fileName, FileMode.Create))
             {
-                using (var writer = new BinaryWriter(stream, Encoding.UTF8, false))
+                using (var writer = new BinaryWriter(stream, Encoding.ASCII, false))
                 {
                     writer.Write(treePath);
                     writer.Write(data);

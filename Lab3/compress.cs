@@ -13,7 +13,6 @@ namespace Huffman
     {
         private byte[] data;
         private List<byte> encodedTree;
-        private List<byte> encodedData;
         private PriorityQueue<int, Node> priorityQueue;
         Dictionary<byte, List<int>> encodeTable = new Dictionary<byte, List<int>>();
 
@@ -22,6 +21,11 @@ namespace Huffman
             FileHandling fh = new FileHandling(fileName);
             data = fh.Read();
 
+            foreach (byte b in data)
+            {
+                Console.Write(b);
+            }
+
             priorityQueue = new PriorityQueue<int,Node>();
 
             if (!DataToHeap()) throw new Exception($"No data in file: {fileName}");
@@ -29,12 +33,17 @@ namespace Huffman
             HuffmanTree();
 
             encodedTree = new List<byte>();
-            encodedData = new List<byte>();
             List<int> bitArray = new List<int>();
 
             priorityQueue.TryPeek(out int p, out Node current);
-            EncodeTree(current, bitArray);
+            EncodeTable(current, bitArray);
 
+            priorityQueue.TryPeek(out p, out current);
+            main m = new main();
+            //m.printTree(current);
+
+            List<byte> byteList = new List<byte>();
+            EncodeTree(current, byteList);
             EncodeData();
             
             encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
@@ -86,65 +95,47 @@ namespace Huffman
                 priorityQueue.Enqueue(p, parent);
             }
         }
-
-        /*private void EncodeTree(Node current, List<int> bitPrefix)
-        {      
-            if (current == null) return;
-
-            if(current.value != 0)
-            {
-                bitPrefix.Add(1);
-                encodeTable.Add(current.value, bitPrefix);
-                encodedTree.Add(1);
-                encodedTree.Add(current.value);
-                return;
-            }
-            else
-            {
-                encodedTree.Add(0);
-                List<int> leftPrefix = new List<int>();
-                leftPrefix.AddRange(bitPrefix);
-                leftPrefix.Add(0);
-                EncodeTree(current.left, leftPrefix);
-
-                encodedTree.Add(0);
-                List<int> rightPrefix = new List<int>();
-                rightPrefix.AddRange(bitPrefix);
-                rightPrefix.Add(0);
-                EncodeTree(current.right, rightPrefix);
-            }
-            return;
-
-        }*/
-        private void EncodeTree(Node current, List<int> str)
+        private void EncodeTable(Node current, List<int> path)
         {
             if (current == null)
             {
                 return;
             }
-            else if (current.value != 0)
+            else if (current.left == null && current.right == null)
             {
-                encodeTable[current.value] = str;
+                encodeTable[current.value] = path;
             }
-            List<int> strR = new List<int>(str);
+            List<int> strR = new List<int>(path);
             strR.Add(1);
-            List<int> strL = new List<int>(str);
+            List<int> strL = new List<int>(path);
             strL.Add(0);
-            EncodeTree(current.left, strL);
-            EncodeTree(current.right, strR);
+            EncodeTable(current.left, strL);
+            EncodeTable(current.right, strR);
+        }
+
+        private void EncodeTree(Node Current, List<byte> path)
+        {
+            if (Current.left == null && Current.right == null) 
+            {
+                encodedTree.AddRange(path);
+                encodedTree.Add(1);
+                encodedTree.Add(Current.value);
+                path.Clear();
+                return;
+            }
+
+            path.Add(0);
+            EncodeTree(Current.left, path);
+            EncodeTree(Current.right, path);
+
+
+
+            return;
         }
 
         private void EncodeData()
         {
             string bitString = "";
-            foreach(var b in encodeTable)
-            {
-                for(int i = 0; i < b.Value.Count; i += 1)
-                {
-                    encodedTree.Add(Convert.ToByte(b.Value[i]));
-                }
-                encodedTree.Add(b.Key);
-            }
 
             foreach(var d in data)
             {
@@ -155,7 +146,7 @@ namespace Huffman
                 }
             }
 
-            data = new byte[((bitString.Length + 7) / 8) + 8];
+            data = new byte[((bitString.Length) / 8)];
             for (int i = 0; i < bitString.Length/8; ++i)
             {
                 data[i] = Convert.ToByte(bitString.Substring(8 * i, 8), 2);
