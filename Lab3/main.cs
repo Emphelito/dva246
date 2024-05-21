@@ -14,11 +14,7 @@ namespace Huffman
     {
         static void Main(string[] args)
         {
-            Compress cpi = new Compress("text.txt");
-            Decompress dcpi = new Decompress("text.hf");
-
-            return;
-            if(args.Length != 2) 
+            if (args.Length != 2)
             {
                 Console.WriteLine("Usage: Huffman.exe -<c/d> <filename>");
                 return;
@@ -33,21 +29,6 @@ namespace Huffman
             }
 
         }
-        public void printTree(Node current)
-        {
-            if (current == null)
-                return;
-
-            // First recur on left subtree
-            printTree(current.left);
-
-            // Then recur on right subtree
-            printTree(current.right);
-
-            // Now deal with the node
-            Console.Write(current.value + " ");
-        }
-
     }
 
     public class Node : IComparable<Node>
@@ -55,8 +36,8 @@ namespace Huffman
         public int frequency;
         public byte value;
 
-        internal Node left = null;
-        internal Node right = null;
+        public Node left = null;
+        public Node right = null;
 
         public int CompareTo(Node other)
         {

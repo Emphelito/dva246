@@ -42,7 +42,6 @@ namespace Huffman
                 {
 
                     fileName = fileName.Substring(0, fileName.LastIndexOf("."));
-                    fileName = "Huffman1.txt";
                     using (var stream = File.Open(fileName, FileMode.Create))
                     {
                         using (var writer = new BinaryWriter(stream, Encoding.ASCII, false))
@@ -61,7 +60,15 @@ namespace Huffman
         }
         public void Write(byte[] data, byte[] treePath)
         {
-            fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
+            if(fileName.Contains("."))
+            {
+                fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
+            }
+            else
+            {
+                 fileName += ".hf";
+            }
+
             using (var stream = File.Open(fileName, FileMode.Create))
             {
                 using (var writer = new BinaryWriter(stream, Encoding.ASCII, false))
