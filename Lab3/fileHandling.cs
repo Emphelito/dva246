@@ -38,19 +38,15 @@ namespace Huffman
         {
             try
             {
-                if (fileName.Substring(fileName.LastIndexOf('.') + 1) == "hf")
+                // Removes everything after a . (example.hf -> example)
+                fileName = fileName.Substring(0, fileName.LastIndexOf("."));
+                using (var stream = File.Open(fileName, FileMode.Create))
                 {
-
-                    fileName = fileName.Substring(0, fileName.LastIndexOf("."));
-                    using (var stream = File.Open(fileName, FileMode.Create))
+                    using (var writer = new BinaryWriter(stream, Encoding.ASCII, false))
                     {
-                        using (var writer = new BinaryWriter(stream, Encoding.ASCII, false))
-                        {
-                            writer.Write(data);
-                        }
-
+                        writer.Write(data);
                     }
-                }                
+                }
             }
             catch
             {
@@ -60,10 +56,12 @@ namespace Huffman
         }
         public void Write(byte[] data, byte[] treePath)
         {
+            // If given fileName contains a file extension(example.rar) replace it with .hf
             if(fileName.Contains("."))
             {
                 fileName = fileName.Substring(0, fileName.LastIndexOf('.')) + ".hf";
             }
+            // If no file extension exists add .hf
             else
             {
                  fileName += ".hf";

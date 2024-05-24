@@ -15,9 +15,12 @@ namespace Huffman
         private List<byte> encodedTree;
         private PriorityQueue<int, Node> priorityQueue;
         Dictionary<byte, List<int>> encodeTable = new Dictionary<byte, List<int>>();
+        private List<int> bitArray;
+
+        Node root;
 
         // Constructor for Unit Tests
-        public Compress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData)
+        public Compress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData, out string utBitString)
         {
             // Read given file
             FileHandling fh = new FileHandling(fileName);
@@ -35,30 +38,28 @@ namespace Huffman
 
             // Unit test Tree
             unitTestTree = new List<byte>();
-            priorityQueue.TryPeek(out int p, out Node current);
-            printTree(current);
+            
+            printTree(root);
             utTree = unitTestTree;
 
             // Encode Table
-            List<int> bitArray = new List<int>();
-            priorityQueue.TryPeek(out p, out current);
-            EncodeTable(current, bitArray);
+            List<int> _bitArray = new List<int>();
+            EncodeTable(root, _bitArray);
 
             // Encode Tree
-            priorityQueue.TryPeek(out p, out current);
             encodedTree = new List<byte>();
-            List<byte> byteList = new List<byte>();
-            EncodeTree(current, byteList);
+            EncodeTree(root);
+            // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
+            // instructions for tree structure begins and ends.
+            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
 
             // Encode Data
             EncodeData();
 
             // Unit Test Data
             utData = data;
+            utBitString = string.Join("", bitArray);
 
-            // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
-            // instructions for tree structure ends.
-            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
             fh.Write(data, encodedTree.ToArray());
         }
 
@@ -78,21 +79,18 @@ namespace Huffman
 
             // Encode Table
             List<int> bitArray = new List<int>();
-            priorityQueue.TryPeek(out int p, out Node current);
-            EncodeTable(current, bitArray);
+            EncodeTable(root, bitArray);
 
             // Encode Tree
-            priorityQueue.TryPeek(out p, out current);
             encodedTree = new List<byte>();
-            List<byte> byteList = new List<byte>();
-            EncodeTree(current, byteList);
+            EncodeTree(root);
+            // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
+            // instructions for tree structure begins and ends.
+            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
 
             // Encode Data
             EncodeData();
 
-            // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
-            // instructions for tree structure ends.
-            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
             fh.Write(data, encodedTree.ToArray());
         }
 
@@ -140,6 +138,7 @@ namespace Huffman
                 
                 priorityQueue.Enqueue(p, parent);
             }
+            priorityQueue.TryPeek(out p, out root);
         }
         //Creates a dict to be used when encoding data
         private void EncodeTable(Node current, List<int> path)
@@ -161,53 +160,55 @@ namespace Huffman
         }
 
         // Creates the instructions for how to build the tree
-        private void EncodeTree(Node Current, List<byte> path)
+        private void EncodeTree(Node Current)
         {
             if (Current.left == null && Current.right == null) 
             {
-                encodedTree.AddRange(path);
                 encodedTree.Add(1);
                 encodedTree.Add(Current.value);
-                path.Clear();
                 return;
             }
-
-            path.Add(0);
-            EncodeTree(Current.left, path);
-            EncodeTree(Current.right, path);
+            encodedTree.Add(0);
+            EncodeTree(Current.left);
+            EncodeTree(Current.right);
 
             return;
         }
 
         private void EncodeData()
         {
-            string bitString = "";
-            int tmp = 0;
-            foreach(var d in data)
+            bitArray = new List<int>();
+            foreach (var d in data)
             {
-                if(d == 116)
-                {
-                    tmp++;
-                }
-
-                List<int> _bitArray = encodeTable[d];
-                foreach (var bit in _bitArray)
-                {
-                    bitString += bit.ToString();
-                }
-                if(tmp == 6180)
-                {
-                    Console.WriteLine();
-                }
+                 bitArray.AddRange(encodeTable[d]);
             }
 
-            data = new byte[(bitString.Length / 8)];
-            for (int i = 0; i < bitString.Length/8; ++i)
+            int numOfBytes = bitArray.Count / 8; // Calculate the number of bytes required
+            if (bitArray.Count % 8 != 0) numOfBytes++; // Add an extra byte if the number of bits is not divisible by 8
+
+            byte[] dataLength = BitConverter.GetBytes(data.Length);
+
+            data = new byte[(numOfBytes)];
+            int byteIndex = 0;
+            int bitIndex = 0;
+
+            foreach (int bit in bitArray)
             {
-                //Dividing 8 char's every itteration into one byte
-                data[i] = Convert.ToByte(bitString.Substring(8 * i, 8), 2);
+                data[byteIndex] |= (byte)(bit << (7 - bitIndex)); // Set the bit in the byte
+                bitIndex++;
+                if (bitIndex == 8) // Move to the next byte if all bits in the current byte are set
+                {
+                    byteIndex++;
+                    bitIndex = 0;
+                }
+            }
+            for(int i = dataLength.Length - 1; i >= 0; i-- )
+            {
+                encodedTree.Insert(0, dataLength[i]);
             }
         }
+
+        // Postorder
         private List<byte> unitTestTree;
         private void printTree(Node current)
         {

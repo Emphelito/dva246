@@ -13,32 +13,45 @@ namespace Huffman
         private int treeDataIndex;
         private byte[] treeStucture;
         private Dictionary<byte, string> keyValuePairs;
-        private Dictionary<string, byte> encodedTable;
+        private Dictionary<string, byte> decodedTable;
         private string bitString;
         private List<byte> content;
+        private int rawLength;
 
         private Node root = new Node();
 
-        public Decompress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData)
+        public Decompress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData, out string utBitString)
         {
             FileHandling fh = new FileHandling(fileName);
             data = fh.Read();
 
+            // Convert the read bytes to bits
             ByteToBit();
 
+            // Unit Test Data
             utData = data;
+            utBitString = bitString;
 
             BuildTree(root, 0);
 
+            // Unit Test Tree
             unitTestTree = new List<byte>();
             printTree(root);
             utTree = unitTestTree;
 
-            encodedTable = new Dictionary<string, byte>();
+            // Create a table used or decoding
+            decodedTable = new Dictionary<string, byte>();
             DecodeTable(root, "");
 
+            // Decode the data
             content = new List<byte>();
             DecodeData(root);
+
+            // If an extra char is added remove it     
+            while (content.Count > rawLength)
+            {
+                content.RemoveAt(content.Count - 1);
+            }
 
             // Unit Test Raw Data
             utRawData = content.ToArray();
@@ -51,66 +64,67 @@ namespace Huffman
             FileHandling fh = new FileHandling(fileName);
             data = fh.Read();
 
+            // Convert the read bytes to bits
             ByteToBit();
 
             BuildTree(root, 0);
 
-            unitTestTree = new List<byte>();
-            printTree(root);
-
-            encodedTable = new Dictionary<string, byte>();
+            // Create a table used or decoding
+            decodedTable = new Dictionary<string, byte>();
             DecodeTable(root, "");
 
+            // Decode the data
             content = new List<byte>();
             DecodeData(root);
+
+            // If an extra char is added remove it
+            while (content.Count > rawLength)
+            {
+                content.RemoveAt(content.Count - 1);
+            }
 
             fh.Write(content.ToArray());
         }
         private void ByteToBit()
         {
             int i;
-            byte bp = data[0];
-            keyValuePairs = new Dictionary<byte, string>();
-            string pathString = "";
+
+            byte[] dataLength = new byte[4];
+            Array.Copy(data, dataLength, 4);
+            rawLength = BitConverter.ToInt32(dataLength, 0);
+            
+            byte bp = data[4];
 
             // Determines where the instructions for how to build the tree ends
             // it also adds all the instructions to a dict
-            for (i =1; i < data.Length; i++)
+            for (i = 5; i < data.Length; i++)
             {
-                pathString += data[i];
-
                 if (data[i] == 1)
                 {
-                    keyValuePairs.Add(data[i + 1], pathString);
                     i++;
                     if (data[i] == bp)
                     {
                         treeDataIndex = i;
                         break;
                     }
-                    pathString = "";
                 }
             }
             treeDataIndex += 1;
 
             treeStucture = new byte[i];
-            Array.Copy(data, 1, treeStucture, 0, i);
+            Array.Copy(data, 5, treeStucture, 0, i);
             byte[] dataTmp = new byte[data.Length - treeDataIndex];
             Array.Copy(data, treeDataIndex, dataTmp, 0, data.Length - treeDataIndex);
             data = dataTmp;
 
             bitString = "";
-            i = 0;
-            foreach (var b in dataTmp)
+            StringBuilder sb = new StringBuilder(data.Length * 8);
+            foreach (var b in data)
             {
-                i++;
-                bitString += Convert.ToString(b, 2).PadLeft(8, '0');
-                if(i == 7040)
-                {
-                    Console.WriteLine();
-                }
+                sb.Append(Convert.ToString(b, 2).PadLeft(8, '0'));
             }
-            var tmp = bitString.Length;
+            bitString = sb.ToString();
+
         }
         private int BuildTree(Node current, int index)
         {
@@ -119,17 +133,12 @@ namespace Huffman
                 current.value = treeStucture[index+ 1];
                 return index + 1;
             }
-            if(current.left == null) 
-            {
-                Node left = new Node();
-                current.left = left;
-            }            
+            Node left = new Node();
+            current.left = left;                 
             index = BuildTree(current.left, index + 1);
-            if(current.right == null)
-            {
-                Node right = new Node();
-                current.right = right;
-            }
+
+            Node right = new Node();
+            current.right = right;            
             index = BuildTree(current.right, index + 1);
 
             return index;
@@ -140,7 +149,7 @@ namespace Huffman
         {
             if(current.left == null && current.right == null)
             {
-                encodedTable.Add(path, current.value);
+                decodedTable.Add(path, current.value);
                 return;
 
             }
@@ -160,7 +169,7 @@ namespace Huffman
                     if (current.left == null)
                     {
                         current = root;
-                        content.Add(encodedTable[pathString]);
+                        content.Add(decodedTable[pathString]);
                         pathString = "";
                         i--;
                     }
@@ -175,7 +184,7 @@ namespace Huffman
                     if (current.right == null)
                     {
                         current = root;
-                        content.Add(encodedTable[pathString]);
+                        content.Add(decodedTable[pathString]);
                         pathString = "";
                         i--;
                     }
@@ -188,6 +197,8 @@ namespace Huffman
                 }
             }
         }
+
+        // Postorder
         private List<byte> unitTestTree;
         private void printTree(Node current)
         {
