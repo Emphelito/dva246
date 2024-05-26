@@ -31,7 +31,7 @@ namespace Huffman
 
             // Convert Byte Data
             priorityQueue = new PriorityQueue<int, Node>();
-            if (!DataToHeap()) throw new Exception($"No data in file: {fileName}");
+            DataToHeap();
 
             // Build HuffmanTree
             HuffmanTree();
@@ -48,13 +48,15 @@ namespace Huffman
 
             // Encode Tree
             encodedTree = new List<byte>();
+            EncodeData();
+
             EncodeTree(root);
             // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
             // instructions for tree structure begins and ends.
-            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
+            encodedTree.Insert(4, encodedTree[encodedTree.Count - 1]);
 
             // Encode Data
-            EncodeData();
+
 
             // Unit Test Data
             utData = data;
@@ -72,7 +74,7 @@ namespace Huffman
 
             // Convert Byte Data
             priorityQueue = new PriorityQueue<int,Node>();
-            if (!DataToHeap()) throw new Exception($"No data in file: {fileName}");
+            DataToHeap();
 
             // Build HuffmanTree
             HuffmanTree();
@@ -81,43 +83,41 @@ namespace Huffman
             List<int> bitArray = new List<int>();
             EncodeTable(root, bitArray);
 
-            // Encode Tree
             encodedTree = new List<byte>();
+            // Encode Data
+            EncodeData();
+
+
+            // Encode Tree
             EncodeTree(root);
             // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
             // instructions for tree structure begins and ends.
             encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
 
-            // Encode Data
-            EncodeData();
+            
+
 
             fh.Write(data, encodedTree.ToArray());
         }
 
         // Creates a dict with data as key and freqency as value
-        private bool DataToHeap()
+        private void DataToHeap()
         {
             Dictionary<byte, int> frequency = new Dictionary<byte, int>();
 
-            if (data == null) return false;
+            if (data == null) throw new Exception($"No data in file");
 
             foreach (byte d in data)
             {
-                if (!frequency.ContainsKey(d))
-                {
-                    frequency.Add(d, 1);
-                }
-                else
-                {
+                if (!frequency.TryAdd(d, 1))
+                {       
                     frequency[d]++;
                 }
             }
             foreach (var keypair in frequency)
             {
                 priorityQueue.Enqueue(keypair.Key, new Node { frequency = keypair.Value, value = keypair.Key });
-            }
-
-            return true;                  
+            }                
         }
 
         private void HuffmanTree()
@@ -171,22 +171,25 @@ namespace Huffman
             encodedTree.Add(0);
             EncodeTree(Current.left);
             EncodeTree(Current.right);
-
-            return;
         }
 
         private void EncodeData()
         {
             bitArray = new List<int>();
+
             foreach (var d in data)
             {
                  bitArray.AddRange(encodeTable[d]);
             }
 
-            int numOfBytes = bitArray.Count / 8; // Calculate the number of bytes required
-            if (bitArray.Count % 8 != 0) numOfBytes++; // Add an extra byte if the number of bits is not divisible by 8
+            int numOfBytes = (bitArray.Count + 7) / 8; // Calculate the number of bytes required
 
             byte[] dataLength = BitConverter.GetBytes(data.Length);
+            // Gives us consitency in the way the size is written to the file
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(dataLength);
+            }
 
             data = new byte[(numOfBytes)];
             int byteIndex = 0;
@@ -202,9 +205,12 @@ namespace Huffman
                     bitIndex = 0;
                 }
             }
-            for(int i = dataLength.Length - 1; i >= 0; i-- )
+            //This adds the length of the tree after decoding to the file 
+            //that means that even if we write garbage or extra useless bits to 
+            //the file the decoding side will know when/where to cut of exccees
+            for(int i = 0; i < dataLength.Length; i++ )
             {
-                encodedTree.Insert(0, dataLength[i]);
+                encodedTree.Add(dataLength[i]);
             }
         }
 

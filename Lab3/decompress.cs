@@ -26,13 +26,14 @@ namespace Huffman
             data = fh.Read();
 
             // Convert the read bytes to bits
+            int tmp = BuildTree(root, 0);
             ByteToBit();
 
             // Unit Test Data
             utData = data;
             utBitString = bitString;
 
-            BuildTree(root, 0);
+            
 
             // Unit Test Tree
             unitTestTree = new List<byte>();
@@ -91,6 +92,10 @@ namespace Huffman
 
             byte[] dataLength = new byte[4];
             Array.Copy(data, dataLength, 4);
+            if(!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(dataLength);
+            }
             rawLength = BitConverter.ToInt32(dataLength, 0);
             
             byte bp = data[4];
@@ -124,14 +129,18 @@ namespace Huffman
                 sb.Append(Convert.ToString(b, 2).PadLeft(8, '0'));
             }
             bitString = sb.ToString();
-
         }
         private int BuildTree(Node current, int index)
         {
-            if (treeStucture[index] == 1)
+            if (data[index] == 1)
             {
-                current.value = treeStucture[index+ 1];
+                current.value = data[index+ 1];
                 return index + 1;
+            }
+            else if (data[index] != 0 && data[index] != 1)
+            {
+                Console.WriteLine("Hello");
+                return index;
             }
             Node left = new Node();
             current.left = left;                 
