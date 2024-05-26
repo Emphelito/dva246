@@ -29,9 +29,12 @@ namespace LCS
 
             for (int i = 1; i <= n; i++)
             {
+                //Reset prev for every new iteration
                 int prev = matrix[0];
                 for (int j = 1; j <= m; j++)
                 {
+                    //Store matrix[j] temporaily,
+                    //used with prev to "simulate" having a 2d array rather then a 1d array
                     int tmp = matrix[j];
                     if (x[j - 1] == y[i - 1])
                     {
@@ -41,6 +44,7 @@ namespace LCS
                     {
                         matrix[j] = Math.Max(matrix[j], matrix[j - 1]);
                     }
+                    //Assign tmp to prev
                     prev = tmp;
                 }
             }
