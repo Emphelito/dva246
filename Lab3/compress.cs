@@ -20,7 +20,7 @@ namespace Huffman
         Node root;
 
         // Constructor for Unit Tests
-        public Compress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData, out string utBitString)
+        public Compress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData, out List<int> utBitArray)
         {
             // Read given file
             FileHandling fh = new FileHandling(fileName);
@@ -43,24 +43,20 @@ namespace Huffman
             utTree = unitTestTree;
 
             // Encode Table
-            List<int> _bitArray = new List<int>();
-            EncodeTable(root, _bitArray);
+            List<int> encodeList = new List<int>();
+            EncodeTable(root, encodeList);
 
-            // Encode Tree
+
             encodedTree = new List<byte>();
+            // Encode Data
             EncodeData();
 
+            // Encode Tree
             EncodeTree(root);
-            // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
-            // instructions for tree structure begins and ends.
-            encodedTree.Insert(4, encodedTree[encodedTree.Count - 1]);
-
-            // Encode Data
-
 
             // Unit Test Data
             utData = data;
-            utBitString = string.Join("", bitArray);
+            utBitArray = bitArray;
 
             fh.Write(data, encodedTree.ToArray());
         }
@@ -80,8 +76,8 @@ namespace Huffman
             HuffmanTree();
 
             // Encode Table
-            List<int> bitArray = new List<int>();
-            EncodeTable(root, bitArray);
+            List<int> encodeList = new List<int>();
+            EncodeTable(root, encodeList);
 
             encodedTree = new List<byte>();
             // Encode Data
@@ -89,12 +85,7 @@ namespace Huffman
 
 
             // Encode Tree
-            EncodeTree(root);
-            // Inserts last element of encoded tree(it is always a symbol) into the index 0, its used to determine when
-            // instructions for tree structure begins and ends.
-            encodedTree.Insert(0, encodedTree[encodedTree.Count - 1]);
-
-            
+            EncodeTree(root);        
 
 
             fh.Write(data, encodedTree.ToArray());
@@ -151,11 +142,12 @@ namespace Huffman
             {
                 encodeTable[current.value] = path;
             }
-            List<int> strR = new List<int>(path);
-            strR.Add(1);
+
             List<int> strL = new List<int>(path);
             strL.Add(0);
             EncodeTable(current.left, strL);
+            List<int> strR = new List<int>(path);
+            strR.Add(1);
             EncodeTable(current.right, strR);
         }
 
@@ -205,9 +197,10 @@ namespace Huffman
                     bitIndex = 0;
                 }
             }
-            //This adds the length of the tree after decoding to the file 
-            //that means that even if we write garbage or extra useless bits to 
-            //the file the decoding side will know when/where to cut of exccees
+            /* This adds the length of the tree after decoding to the file 
+            /* that means that even if we write garbage or extra useless bits to 
+            /* the file the decoding side will know when/where to cut of exccees
+            */
             for(int i = 0; i < dataLength.Length; i++ )
             {
                 encodedTree.Add(dataLength[i]);

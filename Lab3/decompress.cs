@@ -12,28 +12,28 @@ namespace Huffman
         private byte[] data;
         private int treeDataIndex;
         private byte[] treeStucture;
-        private Dictionary<byte, string> keyValuePairs;
         private Dictionary<string, byte> decodedTable;
-        private string bitString;
+        private BitArray bitArray;
         private List<byte> content;
         private int rawLength;
 
         private Node root = new Node();
 
-        public Decompress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData, out string utBitString)
+        public Decompress(string fileName, out List<byte> utTree, out byte[] utData, out byte[] utRawData, out BitArray utBitArray)
         {
             FileHandling fh = new FileHandling(fileName);
             data = fh.Read();
 
-            // Convert the read bytes to bits
-            int tmp = BuildTree(root, 0);
+            // Gets the first 4 bytes that represent data length after decode
+            SegmentData();
+
+            treeDataIndex = BuildTree(root, 0);
+
             ByteToBit();
 
             // Unit Test Data
             utData = data;
-            utBitString = bitString;
-
-            
+            utBitArray = bitArray;  
 
             // Unit Test Tree
             unitTestTree = new List<byte>();
@@ -65,6 +65,11 @@ namespace Huffman
             FileHandling fh = new FileHandling(fileName);
             data = fh.Read();
 
+            // Gets the first 4 bytes that represent data length after decode
+            SegmentData();
+
+            treeDataIndex = BuildTree(root, 0);
+
             // Convert the read bytes to bits
             ByteToBit();
 
@@ -86,71 +91,63 @@ namespace Huffman
 
             fh.Write(content.ToArray());
         }
-        private void ByteToBit()
+        // This removes the first 4 bytes from "data"
+        // They represent the size of the data after decoding
+        private void SegmentData()
         {
-            int i;
-
             byte[] dataLength = new byte[4];
             Array.Copy(data, dataLength, 4);
-            if(!BitConverter.IsLittleEndian)
+            if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(dataLength);
             }
             rawLength = BitConverter.ToInt32(dataLength, 0);
-            
-            byte bp = data[4];
 
-            // Determines where the instructions for how to build the tree ends
-            // it also adds all the instructions to a dict
-            for (i = 5; i < data.Length; i++)
-            {
-                if (data[i] == 1)
-                {
-                    i++;
-                    if (data[i] == bp)
-                    {
-                        treeDataIndex = i;
-                        break;
-                    }
-                }
-            }
-            treeDataIndex += 1;
-
-            treeStucture = new byte[i];
-            Array.Copy(data, 5, treeStucture, 0, i);
-            byte[] dataTmp = new byte[data.Length - treeDataIndex];
-            Array.Copy(data, treeDataIndex, dataTmp, 0, data.Length - treeDataIndex);
+            byte[] dataTmp = new byte[data.Length - 4];
+            Array.Copy(data, 4, dataTmp, 0, data.Length - 4);
             data = dataTmp;
-
-            bitString = "";
-            StringBuilder sb = new StringBuilder(data.Length * 8);
-            foreach (var b in data)
-            {
-                sb.Append(Convert.ToString(b, 2).PadLeft(8, '0'));
-            }
-            bitString = sb.ToString();
         }
         private int BuildTree(Node current, int index)
         {
             if (data[index] == 1)
             {
-                current.value = data[index+ 1];
+                current.value = data[index + 1];
                 return index + 1;
             }
             else if (data[index] != 0 && data[index] != 1)
             {
-                Console.WriteLine("Hello");
                 return index;
             }
             Node left = new Node();
-            current.left = left;                 
+            current.left = left;
             index = BuildTree(current.left, index + 1);
 
             Node right = new Node();
-            current.right = right;            
+            current.right = right;
             index = BuildTree(current.right, index + 1);
 
             return index;
+        }
+
+        private void ByteToBit()
+        {
+            treeDataIndex += 1;
+
+            byte[] dataTmp = new byte[data.Length - treeDataIndex];
+            Array.Copy(data, treeDataIndex, dataTmp, 0, data.Length - treeDataIndex);
+            data = dataTmp;
+
+            bitArray = new BitArray(data.Length * 8);
+            string bitString = "";
+            for (int i = 0; i < data.Length; i++)
+            {
+                bitString += Convert.ToString(data[i], 2).PadLeft(8, '0');
+                for(int j = 0; j < 8; j++)
+                {
+                    bitArray.Set((i * 8) + j, bitString[j] == '1' ? true : false);
+                }
+                bitString = "";
+            }
         }
 
         // Creates a dict that will be used when decoding the data
@@ -171,38 +168,26 @@ namespace Huffman
         private void DecodeData(Node current)
         {
             string pathString = "";
-            for (int i = 0; i < bitString.Length; i++)
+            for (int i = 0; i < bitArray.Count; i++)
             {
-                if (bitString[i].Equals('0'))
+                if (current.left == null)
                 {
-                    if (current.left == null)
+                    current = root;
+                    content.Add(decodedTable[pathString]);
+                    pathString = "";
+                    i--;
+                }
+                else
+                {
+                    pathString += bitArray[i] == true ? '1' : '0';
+                    if (!bitArray[i])
                     {
-                        current = root;
-                        content.Add(decodedTable[pathString]);
-                        pathString = "";
-                        i--;
-                    }
-                    else
-                    {
-                        pathString += bitString[i];
                         current = current.left;
                     }
-                }
-                else if (bitString[i].Equals('1'))
-                {
-                    if (current.right == null)
-                    {
-                        current = root;
-                        content.Add(decodedTable[pathString]);
-                        pathString = "";
-                        i--;
-                    }
                     else
                     {
-                        pathString += bitString[i];
                         current = current.right;
                     }
-
                 }
             }
         }
